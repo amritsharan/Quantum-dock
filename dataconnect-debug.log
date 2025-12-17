@@ -1,0 +1,12 @@
+I1205 06:50:45.892308    4746 load.go:31] Reloading schema and connectors...
+E1205 06:50:45.901075    4746 load.go:63] Could not generate extensions: rpc error: code = NotFound desc = no schema found for service "studio". No service has a schema.
+E1205 06:50:45.901149    4746 load.go:73] Could not load sources: 
+Errors: schema/dataconnect.gql:49:1: expected at least one definition, found }
+I1205 06:50:45.901869    4746 collector.go:107] schema extensions wrote into "/home/user/studio/dataconnect/.dataconnect/schema"
+Generated sources: prelude.gql [73219B] 
+I1205 06:50:45.906865    4746 load.go:74] Finished reloading
+I1205 06:50:45.941098    4746 dev.go:105] Listening on address (HTTP + gRPC): 127.0.0.1:9399
+I1205 06:50:55.630626    4746 control.go:94] [/emulator/studio 212c] UpdateResources(): done
+Main schema: sources: 
+I1205 06:50:55.713911    4746 service.go:152] [/emulator/studio 212c] while configuring to server.Settings{ConnectionString:"dbname='fdcdb' host='127.0.0.1' port='5432' sslmode='disable' dbname='fdcdb'", MaxOpenConnection:1, UseDummy:false, EnableGoogleMLIntegration:false, SchemaValidationMode:""}, failed to reload latest sources: 
+Errors: schema/dataconnect.gql:49:1: expected at least one definition, found }

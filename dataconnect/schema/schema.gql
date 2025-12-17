@@ -1,0 +1,39 @@
+type User @table {
+  displayName: String!
+  createdAt: Timestamp!
+  email: String
+  institution: String
+}
+
+type Molecule @table {
+  name: String!
+  smilesString: String!
+  createdAt: Timestamp!
+  iupacName: String
+  molecularWeight: Float
+}
+
+type Disease @table {
+  name: String!
+  description: String!
+  associatedSymptoms: [String]
+  prevalence: String
+}
+
+type ProteinTarget @table {
+  name: String!
+  proteinSequence: String!
+  disease: Disease!
+  pdbId: String
+  functionDescription: String
+}
+
+type Simulation @table {
+  user: User!
+  molecule: Molecule!
+  proteinTarget: ProteinTarget!
+  simulationDate: Timestamp!
+  bindingAffinityResult: String!
+  notes: String
+  quantumParametersUsed: String
+}

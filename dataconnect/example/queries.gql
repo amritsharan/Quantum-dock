@@ -1,0 +1,29 @@
+mutation CreateMolecule @auth(level: USER) {
+  molecule_insert(data: {
+    name: "New Molecule",
+    smilesString: "C1=CC=CC=C1",
+    createdAt: "2024-04-03T12:00:00Z"
+  })
+}
+
+query ListProteinTargets @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  proteinTargets {
+    id
+    name
+    functionDescription
+  }
+}
+
+mutation UpdateUserInstitution($id: UUID!, $institution: String!) @auth(level: USER) {
+  user_update(id: $id, data: {
+    institution: $institution
+  })
+}
+
+query ListSimulationsForUser($userId: UUID!) @auth(level: USER) {
+  simulations(where: {userId: {eq: $userId}}) {
+    id
+    bindingAffinityResult
+    simulationDate
+  }
+}

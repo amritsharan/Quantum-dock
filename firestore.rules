@@ -1,0 +1,138 @@
+/**
+ * This ruleset enforces a strict user-ownership security model for the QuantumDock application.
+ *
+ * Core Philosophy:
+ * All user-generated data is private and can only be accessed by the user who created it. There are no public or shared collections. The rules are designed to be secure by default, denying all access unless explicitly granted based on user authentication and ownership.
+ *
+ * Data Structure:
+ * The data is organized hierarchically. All user-specific content, including molecules, protein targets, and docking results, is stored in subcollections under a top-level `/users` collection. The path structure `/users/{userId}/...` is the primary mechanism for enforcing ownership.
+ *
+ * Key Security Decisions:
+ * - Strict Ownership: A user can only read or write documents within their own data tree (i.e., under their own `{userId}`).
+ * - No Public Listing: Listing all users from the top-level `/users` collection is explicitly forbidden to protect user privacy.
+ * - No Anonymous Writes: Anonymous users cannot write any data. All write operations require a valid, authenticated user session.
+ * - Path-based Security: List operations are secured by the path, ensuring a user can only query for their own documents, which is both secure and performant.
+ *
+ * Denormalization for Authorization:
+ * To ensure relational integrity and create simple, performant rules, each document within a user's subcollection (e.g., a 'molecule' document) is required to contain a `userId` field that matches the `{userId}` from the document's path. This link is enforced on creation and made immutable on update, preventing documents from ever being moved between users or having their ownership changed.
+ *
+ * Structural Segregation:
+ * The database structure segregates each user's data into their own document tree (`/users/{userId}`). This is a powerful pattern that prevents data leakage between users and makes security rules for queries (`list` operations) straightforward and highly secure.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ----------------------------------------------------------------------
+    // Helper Functions
+    // ----------------------------------------------------------------------
+
+    /**
+     * Returns true if the user is authenticated.
+     */
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    /**
+     * Returns true if the authenticated user's UID matches the provided userId.
+     * This is the fundamental check for document ownership.
+     */
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    /**
+     * Returns true if the document exists and the user is the owner.
+     * CRITICAL: Used for all state-changing update and delete operations.
+     */
+    function isExistingOwner(userId) {
+      return isOwner(userId) && resource != null;
+    }
+    
+    /**
+     * Validates that the user is the owner and the new document being created
+     * contains a 'userId' field that correctly links it to its owner.
+     * This enforces relational integrity at the moment of creation.
+     */
+    function isCreatingOwnData(userId) {
+      return isOwner(userId) && request.resource.data.userId == userId;
+    }
+
+    /**
+     * Validates that the user is the owner of an existing document and that
+     * the 'userId' field is not being changed. This makes ownership immutable.
+     */
+    function isUpdatingOwnedData(userId) {
+      return isExistingOwner(userId) && request.resource.data.userId == resource.data.userId;
+    }
+
+    // ----------------------------------------------------------------------
+    // Collection Rules
+    // ----------------------------------------------------------------------
+
+    /**
+     * @description Rules for a user's root document.
+     * A user can create, read, and update their own user document, but cannot see other users' documents.
+     * @path /users/{userId}
+     * @allow (create) An authenticated user creating their own user profile document: `auth.uid == 'user_abc'`, `create /users/user_abc`
+     * @deny (list) Any user, authenticated or not, trying to list all users: `list /users`
+     * @principle Prevents enumeration of all application users and enforces self-management of user profile data.
+     */
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isExistingOwner(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for user-owned molecule documents.
+     * Only the owner can create, read, update, or delete their own molecule data.
+     * @path /users/{userId}/molecules/{moleculeId}
+     * @allow (create) An authenticated user adding a new molecule to their own collection: `auth.uid == 'user_abc'`, `create /users/user_abc/molecules/mol_123` with `{ "userId": "user_abc", ... }`
+     * @deny (read) A different authenticated user trying to read another user's molecule: `auth.uid == 'user_xyz'`, `get /users/user_abc/molecules/mol_123`
+     * @principle Enforces strict data ownership within a user's private data tree. Validates relational integrity on writes.
+     */
+    match /users/{userId}/molecules/{moleculeId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnData(userId);
+      allow update: if isUpdatingOwnedData(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for user-owned protein target documents.
+     * Only the owner can create, read, update, or delete their own protein target data.
+     * @path /users/{userId}/proteinTargets/{proteinTargetId}
+     * @allow (list) An authenticated user listing their own protein targets: `auth.uid == 'user_abc'`, `list /users/user_abc/proteinTargets`
+     * @deny (update) An authenticated user trying to modify another user's protein target: `auth.uid == 'user_xyz'`, `update /users/user_abc/proteinTargets/prot_456`
+     * @principle Enforces strict data ownership within a user's private data tree. Validates relational integrity on writes.
+     */
+    match /users/{userId}/proteinTargets/{proteinTargetId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnData(userId);
+      allow update: if isUpdatingOwnedData(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+
+    /**
+     * @description Rules for user-owned docking result documents.
+     * Only the owner can create, read, update, or delete their own docking results.
+     * @path /users/{userId}/dockingResults/{dockingResultId}
+     * @allow (delete) An authenticated user deleting their own docking result: `auth.uid == 'user_abc'`, `delete /users/user_abc/dockingResults/res_789`
+     * @deny (create) An authenticated user trying to add a result to another user's collection: `auth.uid == 'user_xyz'`, `create /users/user_abc/dockingResults/res_999`
+     * @principle Enforces strict data ownership within a user's private data tree. Validates relational integrity on writes.
+     */
+    match /users/{userId}/dockingResults/{dockingResultId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isCreatingOwnData(userId);
+      allow update: if isUpdatingOwnedData(userId);
+      allow delete: if isExistingOwner(userId);
+    }
+  }
+}

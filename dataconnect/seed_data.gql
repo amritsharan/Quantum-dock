@@ -1,0 +1,92 @@
+mutation CreateSeedData @transaction @auth(level: PUBLIC, insecureReason: "This operation is safe to expose to the public") {
+  user_insertMany(data: [
+    {
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-26T12:00:00Z",
+      displayName: "demouser1",
+      email: "demouser1@example.com",
+      institution: "Example University"
+    },
+    {
+      id: "550e8400-e29b-41d4-a716-446655440001",
+      createdAt: "2024-04-27T12:00:00Z",
+      displayName: "demouser2",
+      email: "demouser2@example.com",
+      institution: "Example Institute"
+    }
+  ])
+  molecule_insertMany(data: [
+    {
+      id: "650e8400-e29b-41d4-a716-446655440000",
+      createdAt: "2024-04-26T12:00:00Z",
+      name: "molecule1",
+      smilesString: "example_smiles1",
+      iupacName: "example_iupac1",
+      molecularWeight: 100.0
+    },
+    {
+      id: "650e8400-e29b-41d4-a716-446655440001",
+      createdAt: "2024-04-27T12:00:00Z",
+      name: "molecule2",
+      smilesString: "example_smiles2",
+      iupacName: "example_iupac2",
+      molecularWeight: 200.0
+    }
+  ])
+  disease_insertMany(data: [
+    {
+      id: "750e8400-e29b-41d4-a716-446655440000",
+      name: "disease1",
+      description: "example_description1",
+      associatedSymptoms: ["symptom1", "symptom2"],
+      prevalence: "example_prevalence1"
+    },
+    {
+      id: "750e8400-e29b-41d4-a716-446655440001",
+      name: "disease2",
+      description: "example_description2",
+      associatedSymptoms: ["symptom3", "symptom4"],
+      prevalence: "example_prevalence2"
+    }
+  ])
+  proteinTarget_insertMany(data: [
+    {
+      id: "850e8400-e29b-41d4-a716-446655440000",
+      diseaseId: "750e8400-e29b-41d4-a716-446655440000",
+      name: "proteinTarget1",
+      proteinSequence: "example_sequence1",
+      functionDescription: "example_function1",
+      pdbId: "example_pdb1"
+    },
+    {
+      id: "850e8400-e29b-41d4-a716-446655440001",
+      diseaseId: "750e8400-e29b-41d4-a716-446655440001",
+      name: "proteinTarget2",
+      proteinSequence: "example_sequence2",
+      functionDescription: "example_function2",
+      pdbId: "example_pdb2"
+    }
+  ])
+  simulation_insertMany(data: [
+    {
+      id: "950e8400-e29b-41d4-a716-446655440000",
+      moleculeId: "650e8400-e29b-41d4-a716-446655440000",
+      proteinTargetId: "850e8400-e29b-41d4-a716-446655440000",
+      userId: "550e8400-e29b-41d4-a716-446655440000",
+      bindingAffinityResult: "example_affinity1",
+      simulationDate: "2024-04-26T12:00:00Z",
+      quantumParametersUsed: "example_quantum1",
+      notes: "example_notes1"
+    },
+    {
+      id: "950e8400-e29b-41d4-a716-446655440001",
+      moleculeId: "650e8400-e29b-41d4-a716-446655440001",
+      proteinTargetId: "850e8400-e29b-41d4-a716-446655440001",
+      userId: "550e8400-e29b-41d4-a716-446655440001",
+      bindingAffinityResult: "example_affinity2",
+      simulationDate: "2024-04-27T12:00:00Z",
+      quantumParametersUsed: "example_quantum2",
+      notes: "example_notes2"
+    }
+  ])
+}

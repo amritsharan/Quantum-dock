@@ -1,0 +1,175 @@
+{
+  "entities": {
+    "Molecule": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "Molecule",
+      "type": "object",
+      "description": "Represents a molecule structure.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the molecule."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the molecule."
+        },
+        "smiles": {
+          "type": "string",
+          "description": "SMILES string representation of the molecule."
+        },
+        "pdbFile": {
+          "type": "string",
+          "description": "File path or content of the PDB file, if applicable."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "smiles"
+      ]
+    },
+    "ProteinTarget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ProteinTarget",
+      "type": "object",
+      "description": "Represents a biological target protein.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the protein target."
+        },
+        "name": {
+          "type": "string",
+          "description": "Name of the protein target."
+        },
+        "sequence": {
+          "type": "string",
+          "description": "Amino acid sequence of the protein."
+        },
+        "pdbFile": {
+          "type": "string",
+          "description": "File path or content of the PDB file, if applicable."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "sequence"
+      ]
+    },
+    "DockingResult": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "DockingResult",
+      "type": "object",
+      "description": "Represents the result of a molecular docking simulation.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the docking result."
+        },
+        "moleculeId": {
+          "type": "string",
+          "description": "Reference to Molecule. (Relationship: Molecule 1:N DockingResult)"
+        },
+        "proteinTargetId": {
+          "type": "string",
+          "description": "Reference to ProteinTarget. (Relationship: ProteinTarget 1:N DockingResult)"
+        },
+        "dockingScore": {
+          "type": "number",
+          "description": "Docking score from classical docking."
+        },
+        "quantumRefinedScore": {
+          "type": "number",
+          "description": "Binding energy after quantum refinement (VQE/QAOA)."
+        },
+        "bindingAffinity": {
+          "type": "number",
+          "description": "Predicted binding affinity."
+        },
+        "poseFile": {
+          "type": "string",
+          "description": "File path or content containing the 3D pose of the docked molecule."
+        }
+      },
+      "required": [
+        "id",
+        "moleculeId",
+        "proteinTargetId",
+        "dockingScore"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}/molecules/{moleculeId}",
+        "definition": {
+          "entityName": "Molecule",
+          "schema": {
+            "$ref": "#/backend/entities/Molecule"
+          },
+          "description": "Stores molecule data for each user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The ID of the user who owns the molecule."
+            },
+            {
+              "name": "moleculeId",
+              "description": "The unique ID of the molecule."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/proteinTargets/{proteinTargetId}",
+        "definition": {
+          "entityName": "ProteinTarget",
+          "schema": {
+            "$ref": "#/backend/entities/ProteinTarget"
+          },
+          "description": "Stores protein target data for each user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The ID of the user who owns the protein target."
+            },
+            {
+              "name": "proteinTargetId",
+              "description": "The unique ID of the protein target."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/dockingResults/{dockingResultId}",
+        "definition": {
+          "entityName": "DockingResult",
+          "schema": {
+            "$ref": "#/backend/entities/DockingResult"
+          },
+          "description": "Stores docking results for each user. Includes denormalized 'userId', 'moleculeId', and 'proteinTargetId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The ID of the user who owns the docking result."
+            },
+            {
+              "name": "dockingResultId",
+              "description": "The unique ID of the docking result."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "The Firestore structure is designed to manage molecules, protein targets, and docking results for the QuantumDock application. User-specific data is stored under the `/users/{userId}` collection to ensure that only the authenticated user can access their data. \n\n1.  **Authorization Independence:** To avoid using `get()` calls in security rules, authorization data is denormalized. For example, if access to docking results needs to be restricted to the owner of the molecule or protein target, the `ownerId` of the Molecule and ProteinTarget is copied into the DockingResult document.\n2.  **QAPs (Rules are not Filters):** Segregation is used to enforce security rules effectively. Data requiring different access controls are stored in separate collections. Path-based ownership (`/users/{userId}`) ensures secure `list` operations, restricting access to a user's own data. The structure supports secure listing of molecules, protein targets, and docking results for each user.\n3.  **Data Modeling:** The database design reflects the relationships between entities. Each user owns a set of molecules and protein targets. Each molecule-protein target pair can have multiple docking results associated with them.\n4.  **Invariants:** The design supports the integrity of ownership through path-based ownership and denormalized fields. Timestamps can be added to each entity and managed with server-side timestamps via Firestore."
+  }
+}

@@ -1,0 +1,111 @@
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  listProteinTargets: [ProteinTarget] @auth
+  listSimulationsForUser(userId: UUID!): [Simulation] @auth
+}
+
+type Mutation {
+  createLoginHistory(input: CreateLoginHistoryInput!): LoginHistory! @auth
+  updateLoginHistory(input: UpdateLoginHistoryInput!): LoginHistory! @auth
+  createDockingSimulation(input: CreateDockingSimulationInput!): DockingSimulation! @auth
+  createDockingResult(input: CreateDockingResultInput!): DockingResult! @auth
+  Users_create(input: UserInput!): User! @auth
+}
+
+input CreateLoginHistoryInput {
+  status: String!
+}
+
+input UpdateLoginHistoryInput {
+  loginHistoryId: String!
+  status: String!
+}
+
+input CreateDockingSimulationInput {
+  loginHistoryId: String!
+  moleculeSmiles: String!
+  proteinTarget: String!
+  bindingAffinity: Float!
+}
+
+input CreateDockingResultInput {
+  moleculeId: String!
+  targetProteinId: String!
+  dockingScore: Float!
+  refinedEnergy: Float!
+  pose: String!
+  bindingAffinity: Float!
+}
+
+type User @collection(name: "users") {
+  uid: String! @documentId
+  email: String
+  displayName: String
+  createdAt: Timestamp
+}
+
+input UserInput {
+  uid: String!
+  email: String
+  displayName: String
+  createdAt: Timestamp
+}
+
+type LoginHistory @collection(name: "users/{uid}/loginHistory") {
+  loginHistoryId: String! @documentId
+  loginTime: Timestamp!
+  logoutTime: Timestamp
+  status: String! # 'active' or 'inactive'
+  duration: Int # in minutes
+}
+
+type DockingSimulation @collection(name: "users/{uid}/loginHistory/{loginHistoryId}/dockingSimulations") {
+  dockingSimulationId: String! @documentId
+  timestamp: Timestamp!
+  moleculeSmiles: String!
+  proteinTarget: String!
+  bindingAffinity: Float!
+}
+
+type DockingResult @collection(name: "users/{uid}/dockingResults") {
+  dockingResultId: String! @documentId
+  moleculeId: String!
+  targetProteinId: String!
+  dockingScore: Float!
+  refinedEnergy: Float!
+  pose: String!
+  bindingAffinity: Float!
+  createdAt: Timestamp!
+}
+
+# The types below are not used by the application but are here as examples.
+# They can be removed if not needed.
+type Molecule {
+  id: UUID!
+  name: String!
+  smilesString: String!
+  molecularWeight: Float
+}
+
+type ProteinTarget {
+  id: UUID!
+  name: String!
+  functionDescription: String
+}
+
+type Simulation {
+  id: UUID!
+  simulationDate: Timestamp!
+  bindingAffinityResult: String!
+}
+
+type Disease {
+  id: UUID!
+  name: String!
+  description: String
+}
