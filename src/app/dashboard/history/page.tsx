@@ -10,7 +10,9 @@ import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { AlertTriangle, Inbox } from 'lucide-react';
+import { AlertTriangle, Inbox, FlaskConical } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 const getAffinityLevel = (affinity: number): { level: 'High' | 'Moderate' | 'Low', className: string } => {
     if (affinity < 10) return { level: 'High', className: 'bg-green-500 hover:bg-green-500/80' };
@@ -70,10 +72,20 @@ export default function HistoryPage() {
         <main className="flex-1 p-4 md:p-6">
             <Card>
                 <CardHeader>
-                    <CardTitle>Simulation History</CardTitle>
-                    <CardDescription>
-                        Browse and review your past docking simulation results.
-                    </CardDescription>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <CardTitle>Simulation History</CardTitle>
+                            <CardDescription>
+                                Browse and review your past docking simulation results.
+                            </CardDescription>
+                        </div>
+                        <Button asChild>
+                            <Link href="/dashboard">
+                                <FlaskConical className="mr-2 h-4 w-4" />
+                                Go to Simulation
+                            </Link>
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent>
                     {isLoading && <HistoryPageSkeleton />}

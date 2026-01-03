@@ -2,6 +2,7 @@
   "/select-molecule/page": "app/select-molecule/page.js",
   "/select-disease/page": "app/select-disease/page.js",
   "/select-protein/page": "app/select-protein/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
   "/(auth)/sign-in/page": "app/(auth)/sign-in/page.js",
   "/dashboard/page": "app/dashboard/page.js",
   "/dashboard/history/page": "app/dashboard/history/page.js"
