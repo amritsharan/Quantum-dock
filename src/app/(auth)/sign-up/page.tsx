@@ -109,21 +109,19 @@ function SignUpForm() {
 
   const onSubmit = async (data: SignUpFormValues) => {
     setIsLoading(true);
-    createUserWithEmailAndPassword(auth, data.email, data.password)
-      .then(userCredential => {
-        if (userCredential.user) {
-          return updateProfile(userCredential.user, {
-            displayName: data.displayName,
-            // You can also add photoURL here if you have one
-          });
-        }
-      })
-      .then(() => {
-        // This will be handled by the onAuthStateChanged listener
-      })
-      .catch(error => {
-        handleAuthError(error);
-      });
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, data.email, data.password);
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, {
+          displayName: data.displayName,
+        });
+      }
+      // Success is handled by the onAuthStateChanged listener in useUser and the local useEffect
+    } catch (error) {
+      handleAuthError(error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   if (isUserLoading || user) {
@@ -274,4 +272,28 @@ export default function SignUpPage() {
             <SignUpForm />
         </Suspense>
     )
+}
+
+function LoadingSkeleton() {
+    return (
+        <Card className="w-full max-w-sm">
+            <CardHeader className="text-center">
+                <div className="mb-4 flex flex-col items-center gap-4">
+                    <Skeleton className="h-14 w-14 rounded-full" />
+                    <Skeleton className="mx-auto h-8 w-40" />
+                </div>
+                <Skeleton className="mx-auto h-7 w-24" />
+                <Skeleton className="mx-auto h-5 w-48" />
+            </CardHeader>
+            <CardContent className="grid gap-4">
+                <div className="grid gap-2"><Skeleton className="h-4 w-20" /><Skeleton className="h-10 w-full" /></div>
+                <div className="grid gap-2"><Skeleton className="h-4 w-12" /><Skeleton className="h-10 w-full" /></div>
+                <div className="grid gap-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-10 w-full" /></div>
+                <div className="grid gap-2"><Skeleton className="h-4 w-16" /><Skeleton className="h-10 w-full" /></div>
+                <div className="grid gap-2"><Skeleton className="h-4 w-32" /><Skeleton className="h-10 w-full" /></div>
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="mx-auto h-5 w-56" />
+            </CardContent>
+        </Card>
+    );
 }
