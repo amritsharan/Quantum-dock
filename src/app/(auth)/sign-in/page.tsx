@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useAuth, useUser } from '@/firebase';
-import { signInWithEmailAndPassword, sendPasswordResetEmail, getAuth } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 
 
 const signInSchema = z.object({
@@ -54,15 +54,30 @@ export default function SignInPage() {
   const [isResettingPassword, setIsResettingPassword] = useState(false);
   const { user, isUserLoading } = useUser();
   const auth = useAuth();
-  
   const router = useRouter();
   const { toast } = useToast();
   
+  // Ref to prevent showing toast on initial load if user is already logged in
+  const isInitialLoad = useRef(true);
+
   useEffect(() => {
-    if (!isUserLoading && user) {
+    if (isUserLoading) {
+      return;
+    }
+    
+    if (user) {
+      if (!isInitialLoad.current) {
+        toast({
+          title: 'Sign In Successful',
+          description: `Welcome back, ${user.displayName || user.email}!`,
+        });
+      }
       router.push('/dashboard');
     }
-  }, [user, isUserLoading, router]);
+    
+    isInitialLoad.current = false;
+
+  }, [user, isUserLoading, router, toast]);
 
   const {
     register,
@@ -115,7 +130,7 @@ export default function SignInPage() {
     setIsLoading(true);
     signInWithEmailAndPassword(auth, data.email, data.password)
       .then(userCredential => {
-        // This is handled by the onAuthStateChanged listener in useUser
+        // The onAuthStateChanged listener in useUser and the local useEffect will handle success.
       })
       .catch(error => {
         handleAuthError(error);
