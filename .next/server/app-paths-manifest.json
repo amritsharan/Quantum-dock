@@ -1,4 +1,7 @@
 {
+  "/select-molecule/page": "app/select-molecule/page.js",
+  "/select-disease/page": "app/select-disease/page.js",
+  "/select-protein/page": "app/select-protein/page.js",
   "/(auth)/sign-in/page": "app/(auth)/sign-in/page.js",
   "/dashboard/page": "app/dashboard/page.js"
 }
